@@ -26,7 +26,7 @@ app.post(
       (err, api) => {
         if (err) res.status(401).send(err).end();
         else {
-          let token = jwt.sign({ email: req.body.email }, "sicret69");
+          let token = jwt.sign({ email: req.body.email }, "sicret420");
           fs.writeFileSync(req.body.email, JSON.stringify(api.getAppState()));
           res.status(200).send({ authorization: token });
         }
@@ -38,7 +38,7 @@ app.get(
   "/friends", urlencodedJsonParser,
   function (req, res) {
     login({
-      appState: JSON.parse(fs.readFileSync(jwt.decode(req.headers.authorization).email, "utf8"))
+      appState: JSON.parse(fs.readFileSync(jwt.verify(req.headers.authorization, "sicret420").email, "utf8"))
     }, (err, api) => {
       if (err) res.status(401).send(err).end();
       else {
@@ -54,7 +54,7 @@ app.get(
   "/messages/:threadid/:nb?", urlencodedJsonParser,
   function (req, res) {
     login({
-      appState: JSON.parse(fs.readFileSync(jwt.decode(req.headers.authorization).email, "utf8"))
+      appState: JSON.parse(fs.readFileSync(jwt.verify(req.headers.authorization, "sicret420").email, "utf8"))
     }, (err, api) => {
         if (err) res.status(401).send(err).end();
         else {
