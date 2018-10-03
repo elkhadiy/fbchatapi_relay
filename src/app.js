@@ -26,7 +26,8 @@ app.post(
       (err, api) => {
         if (err) res.status(401).send(err).end();
         else {
-          let token = jwt.sign({ email: req.body.email }, "sicret420");
+          let cert = fs.readFileSync('jwtRS256.key')
+          let token = jwt.sign({ email: req.body.email }, cert, { algorithm: 'RS256' });
           fs.writeFileSync(req.body.email, JSON.stringify(api.getAppState()));
           res.status(200).send({ authorization: token });
         }
@@ -37,8 +38,9 @@ app.post(
 app.get(
   "/friends", urlencodedJsonParser,
   function (req, res) {
+    let cert = fs.readFileSync('jwtRS256.key.pub');
     login({
-      appState: JSON.parse(fs.readFileSync(jwt.verify(req.headers.authorization, "sicret420").email, "utf8"))
+      appState: JSON.parse(fs.readFileSync(jwt.verify(req.headers.authorization, cert).email, "utf8"))
     }, (err, api) => {
       if (err) res.status(401).send(err).end();
       else {
@@ -53,8 +55,9 @@ app.get(
 app.get(
   "/messages/:threadid/:nb?", urlencodedJsonParser,
   function (req, res) {
+    let cert = fs.readFileSync('jwtRS256.key.pub');
     login({
-      appState: JSON.parse(fs.readFileSync(jwt.verify(req.headers.authorization, "sicret420").email, "utf8"))
+      appState: JSON.parse(fs.readFileSync(jwt.verify(req.headers.authorization, cert).email, "utf8"))
     }, (err, api) => {
         if (err) res.status(401).send(err).end();
         else {
