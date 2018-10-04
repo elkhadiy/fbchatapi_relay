@@ -86,6 +86,30 @@ app.get(
     })
 })
 
+app.post(
+  "/message/:threadid", urlencodedJsonParser,
+  function (req, res) {
+    db.get(jwt.verify(req.headers.authorization, cert).email, (err, value) => {
+      if (err) res.status(401).send(err).end();
+      else {
+        login({
+          appState: value
+        }, (err, api) => {
+          if (err) res.status(401).send(err).end();
+          else {
+            api.sendMessage(req.body, req.params.threadid, (err, messageInfo) => {
+              if (err) res.status(401).send(err).end();
+              else {
+                res.status(200).send(messageInfo).end();
+              }
+            });
+          }
+        });
+      }
+    })
+  }
+)
+
 // ===========================================================================
 
 app.listen(process.argv[2],
