@@ -14,6 +14,8 @@ const urlencodedJsonParser = bodyParser.json();
 // ===========================================================================
 
 const db = level('./db', { valueEncoding: 'json' });
+const key = fs.readFileSync('jwtRS256.key');
+const cert = fs.readFileSync('jwtRS256.key.pub');
 
 // ===========================================================================
 
@@ -27,8 +29,7 @@ app.post(
       (err, api) => {
         if (err) res.status(401).send(err).end();
         else {
-          let cert = fs.readFileSync('jwtRS256.key')
-          let token = jwt.sign({ email: req.body.email }, cert, { algorithm: 'RS256' });
+          let token = jwt.sign({ email: req.body.email }, key, { algorithm: 'RS256' });
           db.put(req.body.email, api.getAppState(), (err, value) => {
             if (err) res.status(401).send(err).end();
             else {
@@ -43,7 +44,6 @@ app.post(
 app.get(
   "/friends", urlencodedJsonParser,
   function (req, res) {
-    let cert = fs.readFileSync('jwtRS256.key.pub');
     db.get(jwt.verify(req.headers.authorization, cert).email, (err, value) => {
       if (err) res.status(401).send(err).end();
       else {
@@ -65,7 +65,6 @@ app.get(
 app.get(
   "/messages/:threadid/:nb?", urlencodedJsonParser,
   function (req, res) {
-    let cert = fs.readFileSync('jwtRS256.key.pub');
     db.get(jwt.verify(req.headers.authorization, cert).email, (err, value) => {
       if (err) res.status(401).send(err).end();
       else {
