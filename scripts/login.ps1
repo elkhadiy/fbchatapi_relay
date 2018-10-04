@@ -18,6 +18,7 @@ $token = Invoke-RestMethod -Uri "https://messenger4business.elkrafts.xyz/login" 
 
 $header = @{
   "Accept"="application/json"
+  "Content-Type"="application/json"
   "Authorization"=$token.authorization
 }
 

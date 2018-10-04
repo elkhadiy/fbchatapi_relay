@@ -20,4 +20,5 @@ curl -s --request POST \
 token=$(echo $res | getJsonVal authorization)
 
 echo "Accept: application/json" > .session_header_$email
+echo "Content-Type: application/json" > .session_header_$email
 echo "Authorization: "$token >> .session_header_$email
