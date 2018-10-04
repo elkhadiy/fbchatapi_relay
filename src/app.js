@@ -97,6 +97,8 @@ app.post(
         }, (err, api) => {
           if (err) res.status(401).send(err).end();
           else {
+            console.log(req.params.threadid)
+            console.log(req.body)
             api.sendMessage(req.body, req.params.threadid, (err, messageInfo) => {
               if (err) res.status(401).send(err).end();
               else {
