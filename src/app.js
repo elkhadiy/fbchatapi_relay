@@ -89,6 +89,7 @@ app.get(
 app.post(
   "/message/:threadid", urlencodedJsonParser,
   function (req, res) {
+    console.log(req.body);
     db.get(jwt.verify(req.headers.authorization, cert).email, (err, value) => {
       if (err) res.status(401).send(err).end();
       else {
@@ -97,8 +98,8 @@ app.post(
         }, (err, api) => {
           if (err) res.status(401).send(err).end();
           else {
-            console.log(req.params.threadid)
-            console.log(req.body)
+            console.log(req.params.threadid);
+            console.log(req.body);
             api.sendMessage(req.body, req.params.threadid, (err, messageInfo) => {
               if (err) res.status(401).send(err).end();
               else {
