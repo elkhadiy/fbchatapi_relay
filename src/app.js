@@ -5,6 +5,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const login = require("facebook-chat-api");
+const level = require("level");
 
 const app = express();
 const urlencodedParser = bodyParser.urlencoded({extended: false});
@@ -12,7 +13,7 @@ const urlencodedJsonParser = bodyParser.json();
 
 // ===========================================================================
 
-// setup a database or something in here
+const db = level('./db', { valueEncoding: 'json' });
 
 // ===========================================================================
 
@@ -28,8 +29,12 @@ app.post(
         else {
           let cert = fs.readFileSync('jwtRS256.key')
           let token = jwt.sign({ email: req.body.email }, cert, { algorithm: 'RS256' });
-          fs.writeFileSync(req.body.email, JSON.stringify(api.getAppState()));
-          res.status(200).send({ authorization: token });
+          db.put(req.body.email, api.getAppState(), (err, value) => {
+            if (err) res.status(401).send(err).end();
+            else {
+              res.status(200).send({ authorization: token });
+            }
+          })
         }
       })
   }
@@ -39,37 +44,47 @@ app.get(
   "/friends", urlencodedJsonParser,
   function (req, res) {
     let cert = fs.readFileSync('jwtRS256.key.pub');
-    login({
-      appState: JSON.parse(fs.readFileSync(jwt.verify(req.headers.authorization, cert).email, "utf8"))
-    }, (err, api) => {
+    db.get(jwt.verify(req.headers.authorization, cert).email, (err, value) => {
       if (err) res.status(401).send(err).end();
       else {
-        api.getFriendsList((err, data) => {
+        login({
+          appState: value
+        }, (err, api) => {
           if (err) res.status(401).send(err).end();
-          else res.status(200).send(data).end();
+          else {
+            api.getFriendsList((err, data) => {
+              if (err) res.status(401).send(err).end();
+              else res.status(200).send(data).end();
+            });
+          }
         });
       }
-    });
+    })
 })
 
 app.get(
   "/messages/:threadid/:nb?", urlencodedJsonParser,
   function (req, res) {
     let cert = fs.readFileSync('jwtRS256.key.pub');
-    login({
-      appState: JSON.parse(fs.readFileSync(jwt.verify(req.headers.authorization, cert).email, "utf8"))
-    }, (err, api) => {
-        if (err) res.status(401).send(err).end();
-        else {
-          api.getThreadHistory(req.params.threadid, req.params.nb || 50, undefined,
-            (err, hist) => {
-              if (err) res.status(401).send(err).end();
-              else {
-                res.status(200).send(hist).end();
-              }
+    db.get(jwt.verify(req.headers.authorization, cert).email, (err, value) => {
+      if (err) res.status(401).send(err).end();
+      else {
+        login({
+          appState: value
+        }, (err, api) => {
+            if (err) res.status(401).send(err).end();
+            else {
+              api.getThreadHistory(req.params.threadid, req.params.nb || 50, undefined,
+                (err, hist) => {
+                  if (err) res.status(401).send(err).end();
+                  else {
+                    res.status(200).send(hist).end();
+                  }
+              });
+            }
           });
-        }
-      });
+      }
+    })
 })
 
 // ===========================================================================
